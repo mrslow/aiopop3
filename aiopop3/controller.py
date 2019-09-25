@@ -5,6 +5,7 @@ by Barry Warsaw <barry@python.org>
 
 import asyncio
 import threading
+from socket import socketpair
 
 from aiopop3.server import POP3ServerProtocol
 
@@ -13,17 +14,17 @@ class Controller:
     def __init__(self, handler, loop=None, hostname=None, port=8110):
         self.handler = handler
         self.server = None
-        self.hostname = '::1' if hostname is None else hostname
+        self.hostname = hostname or '::1'
         self.port = port
-        self.loop = asyncio.new_event_loop() if loop is None else loop
+        self.loop = loop or asyncio.new_event_loop()
         self.thread = None
         # For exiting the loop.
-        self._rsock, self._wsock = self.loop._socketpair()
+        self._rsock, self._wsock = socketpair()
 
     def _reader(self):
         self.loop.remove_reader(self._rsock)
         self.loop.stop()
-        for task in asyncio.Task.all_tasks(self.loop):
+        for task in asyncio.all_tasks(self.loop):
             task.cancel()
         self._rsock.close()
         self._wsock.close()
@@ -45,7 +46,7 @@ class Controller:
         self.loop.close()
 
     def start(self):
-        assert self.thread is None, 'SMTP daemon already running'
+        assert self.thread is None, 'POP3 daemon already running'
         ready_event = threading.Event()
         self.thread = threading.Thread(target=self._run, args=(ready_event,))
         self.thread.daemon = True
@@ -54,6 +55,6 @@ class Controller:
         ready_event.wait()
 
     def stop(self):
-        assert self.thread is not None, 'SMTP daemon not running'
+        assert self.thread is not None, 'POP3 daemon not running'
         self._wsock.send(b'x')
         self.thread.join()

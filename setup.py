@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-__version__ = '0.1'
+__version__ = '0.2'
 
 setup(
     name='aiopop3',
@@ -16,9 +16,7 @@ setup(
     classifiers=[
         'License :: OSI Approved',
         'Intended Audience :: Developers',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
         'Topic :: Communications :: Email',
         ],
     )
