@@ -342,15 +342,18 @@ class POP3ServerProtocol(asyncio.StreamReaderProtocol):
         if not arg:
             raise POP3Exception('Syntax: DELE <message_id>')
         await self._load_messages()
-        arg, _ = self._get_message_by_num(arg)
-        self._deleted_messages.append(arg)
+        _, msg = self._get_message_by_num(arg)
+        if msg not in self._deleted_messages:
+            self._deleted_messages.append(msg)
+        else:
+            raise POP3Exception('no such message')
         await self.push('+OK message deleted')
 
     def _get_stat(self):
         count = 0
         size = 0
-        for i, message in enumerate(self._messages):
-            if i not in self._deleted_messages:
+        for message in self._messages:
+            if message not in self._deleted_messages:
                 count += 1
                 size += message.size
         return count, size
@@ -364,7 +367,7 @@ class POP3ServerProtocol(asyncio.StreamReaderProtocol):
             count, size = self._get_stat()
             await self.push(f'+OK {count} messages ({size} octets)')
             for i, message in enumerate(self._messages):
-                if i not in self._deleted_messages:
+                if message not in self._deleted_messages:
                     await self.push(f'{i + 1} {message.size}')
             await self.push('.')
 

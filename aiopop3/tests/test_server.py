@@ -220,17 +220,16 @@ def test_dele_no_arg(server):
 
 def test_dele(server):
     user = server.handler.users['user']
+    assert len(user.mail_box) == 2
     with POP3(server.hostname, server.port) as client:
         client.apop('user', 'pass')
         resp = client.dele(2)
         assert resp == b'+OK message deleted'
-        resp, msgs, _ = client.list()
-        assert resp == b'+OK 1 messages (45 octets)'
-        assert msgs == [b'1 45']
-        assert len(user.mail_box) == 2
+        assert client.stat() == (1, 45)
         with pytest.raises(poplib.error_proto) as exc:
-            client.dele(1)
-        assert exc.value.args[0] == b'-ERR Message deleted'
+            client.dele(2)
+        assert exc.value.args[0] == b'-ERR no such message'
+        assert client.stat() == (1, 45)
     assert len(user.mail_box) == 1
 
 
