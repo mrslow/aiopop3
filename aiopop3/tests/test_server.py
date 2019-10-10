@@ -10,8 +10,8 @@ from aiopop3.server import _quote_periods
 def server(event_loop):
     handler = MemoryHandler(event_loop)
     user = handler.add_user('user', 'pass')
-    user.add_email('email1\r\n\r\nfirst line\r\nsecond line\r\nthird line\r\n')
-    user.add_email('email2\r\n\r\nsecond text\r\n')
+    user.add_email('email1\r\n\r\nfirst line\r\nsecond line\r\nthird line')
+    user.add_email('email2\r\n\r\nsecond text')
     controller = Controller(handler)
     controller.start()
     yield controller
@@ -159,15 +159,15 @@ def test_list_all(server):
     with POP3(server.hostname, server.port) as client:
         client.apop('user', 'pass')
         resp, msgs, _ = client.list()
-        assert resp == b'+OK 2 messages (70 octets)'
-        assert msgs == [b'1 47', b'2 23']
+        assert resp == b'+OK 2 messages (66 octets)'
+        assert msgs == [b'1 45', b'2 21']
 
 
 def test_list_message(server):
     with POP3(server.hostname, server.port) as client:
         client.apop('user', 'pass')
         response = client.list(1)
-        assert response == b'+OK 1 (47 octets)'
+        assert response == b'+OK 1 (45 octets)'
 
 
 def test_list_syntax(server):
@@ -199,8 +199,8 @@ def test_list_dublicate(server):
         client.apop('user', 'pass')
         client.list()
         resp, msgs, _ = client.list()
-        assert resp == b'+OK 2 messages (70 octets)'
-        assert msgs == [b'1 47', b'2 23']
+        assert resp == b'+OK 2 messages (66 octets)'
+        assert msgs == [b'1 45', b'2 21']
 
 
 def test_dele_no_auth(server):
@@ -225,8 +225,8 @@ def test_dele(server):
         resp = client.dele(2)
         assert resp == b'+OK message deleted'
         resp, msgs, _ = client.list()
-        assert resp == b'+OK 1 messages (47 octets)'
-        assert msgs == [b'1 47']
+        assert resp == b'+OK 1 messages (45 octets)'
+        assert msgs == [b'1 45']
         assert len(user.mail_box) == 2
         with pytest.raises(poplib.error_proto) as exc:
             client.dele(1)
@@ -254,11 +254,11 @@ def test_rset(server):
         resp = client.dele(1)
         assert resp == b'+OK message deleted'
         resp = client.list()[0]
-        assert resp == b'+OK 1 messages (23 octets)'
+        assert resp == b'+OK 1 messages (21 octets)'
         resp = client.rset()
         assert resp == b'+OK'
         resp = client.list()[0]
-        assert resp == b'+OK 2 messages (70 octets)'
+        assert resp == b'+OK 2 messages (66 octets)'
     assert len(user.mail_box) == 2
 
 
@@ -288,7 +288,7 @@ def test_stat(server):
         client.apop('user', 'pass')
         count, size = client.stat()
         assert count == 2
-        assert size == 70
+        assert size == 66
 
 
 def test_top_syntax(server):
@@ -318,15 +318,15 @@ def test_top(server):
         client.apop('user', 'pass')
         resp, msgs, _ = client.top(1, 1)
         assert resp == b'+OK'
-        assert len(msgs) == 3
-        assert msgs == [b'email1', b'', b'first line']
+        assert len(msgs) == 4
+        assert msgs == [b'email1', b'', b'first line', b'']
 
 
 def test_retr(server):
     with POP3(server.hostname, server.port) as client:
         client.apop('user', 'pass')
         resp, msgs, _ = client.retr(1)
-        assert resp == b'+OK 47 octets'
+        assert resp == b'+OK 45 octets'
         assert len(msgs) == 5
         assert msgs == [b'email1', b'', b'first line', b'second line',
                         b'third line']

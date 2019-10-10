@@ -55,7 +55,8 @@ class MemoryMailBox(MailBox):
 
     async def delete_messages(self, del_messages):
         for m in del_messages:
-            del self.user.mail_box[m]
+            msg = self.user.mail_box[m]
+            self.user.mail_box.remove(msg)
 
 
 class MemoryHandler(BaseHandler):

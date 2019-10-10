@@ -146,6 +146,7 @@ class POP3ServerProtocol(asyncio.StreamReaderProtocol):
         await self._stream_writer.drain()
 
     def _write_end(self):
+        self._stream_writer.write(CRLF)
         self._stream_writer.write(b'.')
         self._stream_writer.write(CRLF)
 
